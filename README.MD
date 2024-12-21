@@ -6,9 +6,9 @@
 
 ## 安装步骤
 
-### JavaScript 脚本版本
+### Python 脚本版本
 
-1. **安装 Node.js**: 确保您的系统上已安装 Node.js。可以从 [Node.js 官网](https://nodejs.org/) 下载并安装。
+1. **安装 Python3**: 确保您的系统上已安装 python3。可以从 [python 官网](https://python.org/) 下载并安装。
 2. **克隆仓库**: 使用 Git 克隆本项目到本地。
 
    ```bash
@@ -16,37 +16,28 @@
    cd TaoBaoGoods
 3. **安装依赖**: 进入项目目录后，安装所需的依赖包。
 
-### Chrome 扩展版本
+### 使用 EXE 版本
 
-1. **克隆仓库**: 使用 Git 克隆本项目到本地。
-
-```bash
-git clone https://github.com/yourusername/TaoBaoGoods.git
-cd TaoBaoGoods
-```
-
-2.  **加载扩展** ：
-打开 Chrome 浏览器，进入 [chrome://extensions/](chrome://extensions/)。
-打开右上角的“开发者模式”。
-点击“加载已解压的扩展程序”，选择 ext 文件夹。
+1. **下载**: 下载release 中的exe文件。
+2. **安装依赖**: 使用依赖包管理工具安装依赖。
 
 ### 使用说明
 
-JavaScript 脚本版本
+#### python 脚本版本
 
-配置脚本: 根据需要修改 config.js 文件中的配置项，如淘宝账号、密码、目标商品链接等。
+配置脚本: 根据需要修改 config.py 文件中的配置项，如淘宝账号、密码、目标商品链接等。
 
 运行脚本: 使用以下命令启动脚本。
 
 ```bash
-node index.js
+python main.py
 ```
 
-### Chrome 扩展版本
+#### EXE 版本
 
-配置扩展: 打开 Chrome 扩展页面，点击 TaoBaoGoods 扩展图标，进入设置页面。
+配置EXE: 打开 EXE 点击配置并填入账号密码及商品链接。
 
-使用扩展: 在淘宝商品页面点击扩展图标，按照提示操作即可。
+使用EXE：打开即用
 
 ## 贡献指南
 
@@ -54,4 +45,4 @@ node index.js
 
 ## 许可证
 
-本项目采用 [MIT 许可证](Lience)。
+本项目采用 [GPLv3.0 许可证](Licence)。
