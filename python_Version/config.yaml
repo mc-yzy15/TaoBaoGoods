@@ -1,0 +1,13 @@
+driver_path: 'path/to/chromedriver'  # ChromeDriver路径
+proxy: 'http://your.proxy.address:port'  # 代理地址
+window_size: '1920,1080'  # 浏览器窗口大小
+username: 'your_username'  # 淘宝用户名
+password: 'your_password'  # 淘宝密码
+items:
+  - url: 'https://detail.tmall.com/item.htm?id=1234567890'
+    quantity: 2
+  # 添加更多商品
+retry_times: 3  # 下单失败重试次数
+retry_interval: 5  # 下单失败重试间隔（秒）
+continue_on_success: true  # 下单成功后继续下单
+exit_on_failure: false  # 下单失败后退出程序
