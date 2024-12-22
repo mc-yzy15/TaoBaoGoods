@@ -47,7 +47,7 @@
 
 ### 使用 EXE 版本
 
-1. **下载**: 下载 release 中的 `TaoBaoAutoBuyer.exe` 文件。
+1. **下载**: 下载 release 中的 `TaoBaoAutoBuyer.exe` 文件。(或下载 `TaoBaoAutoBuyer.zip`并[解压](https://blog.csdn.net/BidaWaves/article/details/142530432))
 2. **配置EXE**: 打开 `TaoBaoAutoBuyer.exe`，点击配置并填入账号密码及商品链接。
 3. **使用EXE**: 打开即用。
 
@@ -107,6 +107,16 @@ exit_on_failure: false  # 下单失败后退出程序
 ## 贡献指南
 
 欢迎任何形式的贡献！如果您有任何建议或发现 bug，请提交 issue 或 pull request。
+
+## 致谢
+
+本项目基于 [Python](https://www.python.org/) 编写，感谢 [Python](https://www.python.org/) 的开源社区。
+
+## 联系我们
+
+如果您有任何问题或建议，欢迎联系我们。
+
+1. 邮箱：[yaoziying@yzit7.wecom.work](mailto:yaoziying@yzit7.wecom.work)
 
 ## 许可证
 
