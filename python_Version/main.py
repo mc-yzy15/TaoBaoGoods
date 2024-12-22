@@ -103,7 +103,7 @@ class TaoBaoAutoBuyer:
             self.place_order()
         except Exception as e:
             logging.error(f"运行失败: {e}")
-            messagebox.showerror("运行失败", f"程序运行过程中出现错误: {e}")
+            messagebox.showerror("运行失败", f"程序运行过程中出现错误: {e}请查看日志文件，如不能理解，请提交issue")
             self.driver.quit()
             exit(1)
 
