@@ -27,26 +27,68 @@
 1. **安装 Python3**: 确保您的系统上已安装 python3。可以从 [python 官网](https://python.org/) 下载并安装。
 2. **克隆仓库**: 使用 Git 克隆本项目到本地。
 
-   ```bash
-   git clone https://github.com/yourusername/TaoBaoGoods.git
+   ```powershell
+   git clone "https://github.com/mc-yzy15/TaoBaoGoods.git"
    cd TaoBaoGoods
 3. **安装依赖**: 进入项目目录后，安装所需的依赖包。
 
+   ```powershell
+   .\init.py
+   ```
+
 ### 使用 EXE 版本
 
-1. **下载**: 下载release 中的exe文件。
-2. **安装依赖**: 使用依赖包管理工具安装依赖。
+1. **下载**: 下载 release 中的 `TaoBaoAutoBuyer.exe` 文件。
+2. **配置EXE**: 打开 `TaoBaoAutoBuyer.exe`，点击配置并填入账号密码及商品链接。
+3. **使用EXE**: 打开即用。
 
 ### 使用说明
 
+>**以下命令均需使用powershell执行**
+
 #### python 脚本版本
 
-配置脚本: 根据需要修改 config.py 文件中的配置项，如淘宝账号、密码、目标商品链接等。
+配置脚本: 根据需要修改 config.yaml 文件中的配置项，如淘宝账号、密码、目标商品链接等。
+
+##### 淘宝自动购买器配置文件说明
+
+以下是对 `config.yaml` 文件中各个配置项的详细说明：
+
+| 配置项            | 说明                                                                 |
+|-------------------|----------------------------------------------------------------------|
+| driver_path       | ChromeDriver路径。请确保路径正确指向你的ChromeDriver可执行文件。     |
+| proxy             | 代理服务器地址（格式：`http://your.proxy.address:port`）。如果不需要使用代理，可以留空。 |
+| window_size       | 浏览器窗口大小（格式：`宽度,高度`），例如：`1920,1080`。            |
+| username          | 淘宝用户名。请填写你用于登录淘宝的用户名。                           |
+| password          | 淘宝密码。请填写你用于登录淘宝的密码。                               |
+| items             | 商品列表。每个商品包含一个URL和数量。                                |
+| retry_times       | 下单失败重试次数。当下单失败时，程序将重试指定次数。                 |
+| retry_interval    | 下单失败重试间隔（秒）。每次重试之间的时间间隔。                      |
+| continue_on_success | 下单成功后是否继续尝试下单其他商品。值为`true`或`false`。           |
+| exit_on_failure   | 下单失败后是否退出程序。值为`true`或`false`。                         |
+
+### 示例配置文件 (`config.yaml`)
+
+```yaml
+driver_path: 'path/to/chromedriver'  # ChromeDriver路径
+proxy: 'http://your.proxy.address:port'  # 代理地址
+window_size: '1920,1080'  # 浏览器窗口大小
+username: 'your_username'  # 淘宝用户名
+password: 'your_password'  # 淘宝密码
+items:
+  - url: 'https://detail.tmall.com/item.htm?id=1234567890'
+    quantity: 2
+  # 添加更多商品
+retry_times: 3  # 下单失败重试次数
+retry_interval: 5  # 下单失败重试间隔（秒）
+continue_on_success: true  # 下单成功后继续下单
+exit_on_failure: false  # 下单失败后退出程序
+```
 
 运行脚本: 使用以下命令启动脚本。
 
-```bash
-python main.py
+```powershell
+.\start.ps1
 ```
 
 #### EXE 版本
