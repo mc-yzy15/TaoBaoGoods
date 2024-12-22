@@ -24,9 +24,16 @@
 
 >**以下命令均需使用powershell执行（.bat为双击运行）**
 
+### 安装ChromeDriver
+
+1. 下载ChromeDriver，并解压到任意目录，[参考这位大佬的教程](https://blog.csdn.net/zhoukeguai/article/details/113247342)
+2. 将解压后的文件夹重命名为`chromedriver`，并移动到`C:\Windows\System32`目录下
+3. 验证是否安装成功：打开powershell，输入`chromedriver --version`，如果返回版本号，则安装成功
+
 ### Python 脚本版本
 
 1. **安装 Python3**: 确保您的系统上已安装 python3。可以从 [python 官网](https://python.org/) 下载并安装。
+1.2 **打开powershell，输入`python --version`，如果返回版本号，则安装成功**
 2. **克隆仓库**: 使用 Git 克隆本项目到本地。
 
    ```powershell

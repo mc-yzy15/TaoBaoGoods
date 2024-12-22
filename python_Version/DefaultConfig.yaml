@@ -1,0 +1,13 @@
+
+# config.yaml
+# 默认配置文件
+window_size: "1280,720"
+proxy: ""
+driver_path: "chromedriver.exe"
+username: "your_username"
+password: "your_password"
+items:
+  - url: "https://example.com/item1"
+    quantity: 1
+  - url: "https://example.com/item2"
+    quantity: 2
