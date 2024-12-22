@@ -1,0 +1,28 @@
+# start.ps1
+
+
+Write-Output "Starting script..."
+
+# 获取当前脚本所在的目录
+$scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+# 激活虚拟环境
+if (Test-Path ".\.venv\Scripts\Activate.ps1") {
+    . ".\.venv\Scripts\Activate.ps1"}
+else {
+    Write-Error "虚拟环境未找到，请先创建虚拟环境或检查路径是否正确。"
+    exit 1
+}
+
+# 运行 Python 脚本
+python.exe .\TaoBaoGoods\python_Version\main.py
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Python 脚本执行失败，退出码: $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
+
+Write-Output "Done!"
+Write-Output "Press any key to exit..."
+$null = $Host.UI.RawUI.ReadKey( "NoEcho,IncludeKeyDown")
+exit
