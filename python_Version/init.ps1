@@ -60,3 +60,4 @@ try {
 Write-Output "Done!"
 Write-Output "Press any key to exit..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+exit 0
