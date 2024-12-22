@@ -22,6 +22,8 @@
 
 ## 安装步骤
 
+>**以下命令均需使用powershell执行（.bat为双击运行）**
+
 ### Python 脚本版本
 
 1. **安装 Python3**: 确保您的系统上已安装 python3。可以从 [python 官网](https://python.org/) 下载并安装。
@@ -43,8 +45,6 @@
 3. **使用EXE**: 打开即用。
 
 ### 使用说明
-
->**以下命令均需使用powershell执行**
 
 #### python 脚本版本
 

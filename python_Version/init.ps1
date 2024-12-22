@@ -1,5 +1,10 @@
 # init.ps1
 
+# 显示提示信息
+Write-Output "Initializing virtual environment and installing dependencies and packages..."
+Write-Output "This may take a while..."
+Write-Output "Please wait..."
+
 # 获取脚本所在目录
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
 
@@ -55,8 +60,3 @@ try {
 Write-Output "Done!"
 Write-Output "Press any key to exit..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-
-# 取消激活虚拟环境
-Write-Output "Deactivating virtual environment..."
-Invoke-Script -scriptPath "$scriptsPath\deactivate.ps1" -errorMessage "Virtual environment deactivation script not found at $scriptsPath\deactivate.ps1"
-Write-Output "Virtual environment deactivated."
