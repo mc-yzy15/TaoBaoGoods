@@ -15,7 +15,7 @@ else {
 }
 
 # 运行 Python 脚本
-python.exe .\TaoBaoGoods\python_Version\main.py
+python.exe .\main.py
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Python 脚本执行失败，退出码: $LASTEXITCODE"
