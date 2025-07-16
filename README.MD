@@ -116,7 +116,7 @@ exit_on_failure: false  # 下单失败后退出程序
 
 如果您有任何问题或建议，欢迎联系我们。
 
-1. 邮箱：[yaoziying@yzit7.wecom.work](mailto:yaoziying@yzit7.wecom.work)
+1. 邮箱：[yingmoliuguang@yeah.net](mailto:yingmoliuguang@yeah.net)
 
 ## 许可证
 
