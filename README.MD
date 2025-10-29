@@ -27,7 +27,7 @@
 ### 安装ChromeDriver
 
 1. 下载ChromeDriver，并解压到任意目录，[参考这位大佬的教程](https://blog.csdn.net/zhoukeguai/article/details/113247342)
-2. 将解压后的文件夹重命名为`chromedriver`，并移动到`C:\Windows\System32`目录下或本项目目录下（python_Version\Lib\site-packages\selenium\webdriver\chrome\chromedriver`）
+2. 将解压后的文件夹重命名为`chromedriver`，并移动到`C:\Windows\System32`目录下或本项目目录下（python_Version\.venv\Lib\site-packages\selenium\webdriver\chrome\chromedriver`）
 3. 验证是否安装成功：打开powershell，输入`chromedriver --version`，如果返回版本号，则安装成功
 
 ### Python 脚本版本
