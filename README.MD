@@ -2,11 +2,11 @@
 
 ## 项目简介
 
-`TaoBaoGoods` 是一个可以帮助用户抢购淘宝商品的工具，包括 Python 脚本版本和 EXE 版本。该工具使用 Selenium 和 ChromeDriver 实现自动化购买，支持 Chrome 和 Firefox 浏览器。通过自动化操作，用户可以在商品上架后立即下单，提高抢购成功率。
+`TaoBaoGoods` 是一个可以帮助用户抢购淘宝商品的工具，包括 Python 脚本版本和 C 语言版本。该工具使用自动化技术实现购买流程，支持 Chrome 浏览器。通过自动化操作，用户可以在商品上架后立即下单，提高抢购成功率。
 
 ## 特性
 
-- 支持 Chrome 和 Firefox 浏览器
+- 支持 Chrome 浏览器
 - 支持自动登录和自动下单
 - 支持自定义商品链接和数量
 - 支持自定义抢购时间
@@ -18,7 +18,8 @@
 - 支持自定义下单失败重试间隔
 - 支持自定义下单成功后继续下单
 - 支持自定义下单失败后退出程序
-- 支持自定义下单失败后继续下单
+- C 语言版本提供简洁的用户界面
+- C 语言版本提供更快的执行速度和更低的资源占用
 
 ## 安装步骤
 
@@ -103,6 +104,41 @@ exit_on_failure: false  # 下单失败后退出程序
 配置EXE: 打开 EXE 点击配置并填入账号密码及商品链接。
 
 使用EXE：打开即用
+
+### C 语言版本使用说明
+
+#### 系统要求
+- Windows 10/11 操作系统
+- Visual Studio 2022（社区版、专业版或企业版）
+- Chrome 浏览器和对应版本的 ChromeDriver
+
+#### 编译方法
+1. **安装 Visual Studio 2022**：确保安装了 C/C++ 开发工具和 Windows SDK
+2. **打开解决方案**：使用 Visual Studio 2022 打开 `C_Version\TaoBaoAutoBuyer.sln`
+3. **选择配置**：在顶部菜单栏选择 Debug 或 Release 模式
+4. **编译项目**：点击 "生成" -> "生成解决方案" 或按 F7 快捷键
+
+#### 编译结果
+- Debug 模式生成的可执行文件：`C_Version\Debug\TaoBaoAutoBuyer.exe`
+- Release 模式生成的可执行文件：`C_Version\Release\TaoBaoAutoBuyer.exe`
+
+#### 配置方法
+1. 编辑 `C_Version\DefaultConfig.txt` 文件
+2. 配置项说明：
+   ```
+   window_size=1280,720  # 浏览器窗口大小
+   proxy=  # 代理地址（可选）
+   driver_path=chromedriver.exe  # ChromeDriver路径
+   username=your_username  # 淘宝用户名
+   password=your_password  # 淘宝密码
+   item=https://detail.tmall.com/item.htm?id=1234567890,2  # 商品链接和数量
+   ```
+
+#### 使用方法
+1. 确保 ChromeDriver 与您的 Chrome 浏览器版本匹配
+2. 将 ChromeDriver 放置在与可执行文件相同的目录下或设置正确的路径
+3. 双击运行编译后的可执行文件
+4. 程序将自动启动浏览器并执行购买流程
 
 ## 贡献指南
 
