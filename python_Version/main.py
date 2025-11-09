@@ -9,6 +9,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import random
+import time
 import yaml
 import os
 import tkinter as tk
@@ -108,16 +109,24 @@ class TaoBaoAutoBuyer:
             exit(1)
 
     def update_status(self, message):
+        logging.info(message)
         self.status_label.config(text=message)
         self.root.update_idletasks()
 
 def load_config(file_path):
-    if not os.path.exists(file_path):
-        create_default_config(file_path)
-        messagebox.showinfo("配置文件创建", f"默认配置文件已创建在 {file_path}")
-    with open(file_path, 'r', encoding='utf-8') as file:
-        config = yaml.safe_load(file)
-    return config
+    try:
+        if not os.path.exists(file_path):
+            create_default_config(file_path)
+            messagebox.showinfo("配置文件创建", f"默认配置文件已创建在 {file_path}")
+        with open(file_path, 'r', encoding='utf-8') as file:
+            config = yaml.safe_load(file)
+            if not config:
+                raise ValueError("配置文件为空或格式不正确")
+            return config
+    except Exception as e:
+        logging.error(f"加载配置文件失败: {e}")
+        messagebox.showerror("配置文件错误", f"加载配置文件失败: {e}")
+        exit(1)
 
 def create_default_config(file_path):
     default_config = """
