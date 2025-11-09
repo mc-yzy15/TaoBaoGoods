@@ -1,6 +1,7 @@
 #include "browser.h"
 #include <stdio.h>
-#include <stdlib.h<string.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <windows.h>
 
@@ -11,7 +12,7 @@ struct BrowserDriver {
 };
 
 // 初始化浏览器
-browser* browser_init(const char* window_size, const char* proxy, const char* driver_path) {
+Browser* browser_init(const char* window_size, const char* proxy, const char* driver_path) {
     Browser* browser = (Browser*)malloc(sizeof(Browser));
     if (!browser) {
         return NULL;

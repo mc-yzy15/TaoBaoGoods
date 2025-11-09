@@ -10,7 +10,7 @@ typedef struct {
 } Browser;
 
 // 函数声明
-browser* browser_init(const char* window_size, const char* proxy, const char* driver_path);
+Browser* browser_init(const char* window_size, const char* proxy, const char* driver_path);
 void browser_cleanup(Browser* browser);
 bool browser_login(Browser* browser, const char* username, const char* password);
 bool browser_add_to_cart(Browser* browser, const char* url, int quantity);
