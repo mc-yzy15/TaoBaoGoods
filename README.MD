@@ -28,8 +28,9 @@
 ### 安装ChromeDriver
 
 1. 下载ChromeDriver，并解压到任意目录，[参考这位大佬的教程](https://blog.csdn.net/zhoukeguai/article/details/113247342)
-2. 将解压后的文件夹重命名为`chromedriver`，并移动到`C:\Windows\System32`目录下或本项目目录下（python_Version\.venv\Lib\site-packages\selenium\webdriver\chrome\chromedriver`）
-3. 验证是否安装成功：打开powershell，输入`chromedriver --version`，如果返回版本号，则安装成功
+2. 将解压后的文件夹重命名为`chromedriver`，并移动到`C:\Program Files\`目录下
+3. 打开系统环境变量，找到PATH，添加`C:\Program Files\chromedriver`，并确定应用
+4. 验证是否安装成功：打开powershell，输入`chromedriver --version`，如果返回版本号，则安装成功
 
 ### Python 脚本版本
 
@@ -40,10 +41,13 @@
    ```powershell
    git clone "https://github.com/mc-yzy15/TaoBaoGoods.git"
    cd TaoBaoGoods
+   cd python_Version
+   ```
 3. **安装依赖**: 进入项目目录后，安装所需的依赖包。
 
    ```powershell
-   .\init.ps1
+   .venv/Scripts/Activate.ps1
+   pip install -r requirements.txt
    ```
 
 ### 使用 EXE 版本
