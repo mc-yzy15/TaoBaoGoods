@@ -1,3 +1,23 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "taobaogoods"
+version = "1.1.0"
+description = "Python mainline implementation for TaoBaoGoods."
+readme = { file = "docs/README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+dependencies = [
+    "PyYAML>=6.0,<7",
+    "selenium>=4.27,<5",
+]
+
+[project.scripts]
+taobaogoods = "taobaogoods.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]

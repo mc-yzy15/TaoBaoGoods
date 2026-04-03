@@ -330,3 +330,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# TaoBaoGoods local/editor/build artifacts
+**/.vs/
+**/.venv/
+python_Version/artifacts/
+python_Version/main.build/
+python_Version/main.dist/
+python_Version/main.onefile-build/
+*.error

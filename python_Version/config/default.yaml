@@ -1,0 +1,9 @@
+# TaoBaoGoods default configuration
+window_size: "1280,720"
+proxy: ""
+driver_path: "chromedriver.exe"
+username: ""
+password: ""
+items:
+  - url: "https://example.com/item1"
+    quantity: 1
