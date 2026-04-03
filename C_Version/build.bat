@@ -6,14 +6,6 @@ chcp 936 > nul
 echo 淘宝自动购买器 - C语言版本编译脚本
 echo ===================================
 
-rem 检查是否安装了MinGW
-where gcc > nul 2> nul
-if %errorlevel% neq 0 (
-    echo 错误：未找到GCC编译器。请确保已安装MinGW并将其添加到系统PATH中。
-    pause
-    exit /b 1
-)
-
 echo 开始编译项目...
 
 rem 编译所有源文件
