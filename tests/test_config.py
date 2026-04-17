@@ -9,7 +9,7 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from taobaogoods.config import ConfigValidationError, load_config, resolve_credentials, validate_runtime_prerequisites
+from config import ConfigValidationError, load_config, resolve_credentials, validate_runtime_prerequisites
 
 
 class ConfigTests(unittest.TestCase):

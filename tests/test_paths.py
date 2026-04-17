@@ -8,7 +8,7 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from taobaogoods.paths import ARTIFACTS_DIR, CONFIG_DIR, DEFAULT_CONFIG_PATH, PROJECT_ROOT as PACKAGE_PROJECT_ROOT
+from paths import ARTIFACTS_DIR, CONFIG_DIR, DEFAULT_CONFIG_PATH, PROJECT_ROOT as PACKAGE_PROJECT_ROOT
 
 
 class PathTests(unittest.TestCase):
