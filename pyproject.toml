@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-taobaogoods = "taobaogoods.cli:main"
+taobaogoods = "cli:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
