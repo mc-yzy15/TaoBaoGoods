@@ -35,23 +35,59 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install nuitka and dependencies
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
         run: |
-          pip install nuitka==2.6.6 pyyaml selenium
+          pip install nuitka==2.6.6
+          pip install -r requirements.txt
 
-      - name: Build with nuitka standalone
+      - name: Install dependencies (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          pip install nuitka==2.6.6
+          pip install -r requirements.txt
+
+      - name: Export platform name
+        id: platform
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            echo "NAME=win" >> "$GITHUB_OUTPUT"
+          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            echo "NAME=linux" >> "$GITHUB_OUTPUT"
+          else
+            echo "NAME=macos" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build with nuitka standalone (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          python -m nuitka `
+            --standalone `
+            --onefile `
+            --enable-plugin=selenium `
+            --output-filename=TaoBaoGoods-PerPush-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} `
+            --output-dir=dist `
+            main.py
+
+      - name: Build with nuitka standalone (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
         run: |
           python -m nuitka \
             --standalone \
             --onefile \
             --enable-plugin=selenium \
-            --output-filename=TaoBaoGoods-PerPush-${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}${{ matrix.suffix }} \
+            --output-filename=TaoBaoGoods-PerPush-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} \
             --output-dir=dist \
             main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TaoBaoGoods-PerPush-${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}
-          path: dist/TaoBaoGoods-PerPush-${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}${{ matrix.suffix }}
+          name: TaoBaoGoods-PerPush-${{ steps.platform.outputs.NAME }}
+          path: dist/TaoBaoGoods-PerPush-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }}
           retention-days: 7

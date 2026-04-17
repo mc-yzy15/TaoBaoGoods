@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "taobaogoods"
-version = "1.1.0"
-description = "Python mainline implementation for TaoBaoGoods."
+version = "1.2.0"
+description = "TaoBaoGoods - 淘宝自动购 深度防检测版"
 readme = { file = "docs/README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 dependencies = [
     "PyYAML>=6.0,<7",
     "selenium>=4.27,<5",
+    "selenium-stealth>=1.0.0",
 ]
 
 [project.scripts]

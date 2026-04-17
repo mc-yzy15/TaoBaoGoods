@@ -15,6 +15,7 @@ env:
 
 jobs:
   build:
+    environment: GITHUB_TOKEN
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -37,30 +38,97 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install nuitka and dependencies
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
         run: |
-          pip install nuitka==2.6.6 pyyaml selenium
+          pip install nuitka==2.6.6
+          pip install -r requirements.txt
+          pip install selenium-stealth
 
-      - name: Get version tag
-        id: version
+      - name: Install dependencies (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          pip install nuitka==2.6.6
+          pip install -r requirements.txt
+          pip install selenium-stealth
+
+      - name: Get version tag (Windows)
+        id: version_win
+        if: matrix.os == 'windows-latest'
+        shell: powershell
         run: |
           $tag = $env:GITHUB_REF_NAME
           $version = $tag -replace "^v", ""
-          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
+          "VERSION=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Build with nuitka standalone
+      - name: Get version tag (Unix)
+        id: version_unix
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Export version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            echo "VERSION=${{ steps.version_win.outputs.VERSION }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "VERSION=${{ steps.version_unix.outputs.VERSION }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Export platform name
+        id: platform
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            echo "NAME=win" >> "$GITHUB_OUTPUT"
+          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            echo "NAME=linux" >> "$GITHUB_OUTPUT"
+          else
+            echo "NAME=macos" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build with nuitka (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          python -m nuitka `
+            --standalone `
+            --onefile `
+            --enable-plugin=selenium `
+            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} `
+            --output-dir=dist `
+            main.py
+
+      - name: Build with nuitka (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
         run: |
           python -m nuitka \
             --standalone \
             --onefile \
             --enable-plugin=selenium \
-            --output-filename=TaoBaoGoods-v$env:VERSION-${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}${{ matrix.suffix }} \
+            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} \
             --output-dir=dist \
             main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}
-          path: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'ubuntu-latest' && 'linux' || 'macos' }}${{ matrix.suffix }}
+          name: TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}
+          path: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }}
           retention-days: 30
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }}
+        env:
+          TOKEN: ${{ secrets.TOKEN }}

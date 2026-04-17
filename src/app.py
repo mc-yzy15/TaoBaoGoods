@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
@@ -33,6 +34,7 @@ class PurchaseApp:
         status_sink: StatusSink | None = None,
         *,
         dry_run: bool = False,
+        purchase_time: datetime | None = None,
     ) -> RunResult:
         sink = status_sink or NullStatusSink()
         if dry_run:
@@ -56,7 +58,7 @@ class PurchaseApp:
             session.checkout()
 
             sink.set_status("正在提交订单...")
-            session.place_order()
+            session.place_order(target_time=purchase_time)
             sink.set_status("流程执行完成。")
             return RunResult(success=True, message="自动化流程执行完成。")
         except Exception as exc:

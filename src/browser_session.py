@@ -10,8 +10,6 @@ from typing import Protocol
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -19,11 +17,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from config import AppConfig
 from paths import SCREENSHOT_DIR, ensure_runtime_dirs
+from stealth import apply_stealth, build_stealth_chrome
 
+
+TAOBAO_URLS = {
+    "login": "https://login.taobao.com",
+    "cart": "https://cart.taobao.com/cart.htm",
+}
 
 TAOBAO_SELECTORS = {
-    "login_url": "https://login.taobao.com",
-    "cart_url": "https://cart.taobao.com/cart.htm",
     "username": (By.ID, "fm-login-id"),
     "password": (By.ID, "fm-login-password"),
     "login_submit": (By.ID, "login-form"),
@@ -37,6 +39,9 @@ TAOBAO_SELECTORS = {
     "login_success": (By.CSS_SELECTOR, ".site-nav-user, .user-info"),
 }
 
+URLS = TAOBAO_URLS
+SELECTORS = TAOBAO_SELECTORS
+
 
 class BrowserError(RuntimeError):
     pass
@@ -48,7 +53,7 @@ class BrowserActionError(BrowserError):
     detail: str
 
     def __str__(self) -> str:
-        return f"{self.action} 失败: {detail}"
+        return f"{self.action} 失败: {self.detail}"
 
 
 class BrowserSession(Protocol):
@@ -63,13 +68,16 @@ class BrowserSession(Protocol):
 class SeleniumBrowserSession:
     def __init__(self, config: AppConfig) -> None:
         self._config = config
-        self._driver = self._build_driver(config)
-        self._stealth()
+        self._driver = build_stealth_chrome(config)
+        self._human_delay_min = 0.08
+        self._human_delay_max = 0.25
+        self._scroll_pause_min = 0.4
+        self._scroll_pause_max = 1.0
 
     def login(self, username: str, password: str) -> None:
         def _perform() -> None:
-            self._driver.get(SELECTORS["login_url"])
-            time.sleep(random.uniform(1.0, 2.5))
+            self._driver.get(URLS["login"])
+            time.sleep(random.uniform(self._human_delay_min, self._human_delay_max))
             username_input = self._wait_for(SELECTORS["username"])
             self._human_type(username_input, username)
             time.sleep(random.uniform(0.3, 0.8))
@@ -109,7 +117,7 @@ class SeleniumBrowserSession:
 
     def checkout(self) -> None:
         def _perform() -> None:
-            self._driver.get(SELECTORS["cart_url"])
+            self._driver.get(URLS["cart"])
             time.sleep(random.uniform(2.0, 3.5))
             self._scroll_random()
             time.sleep(random.uniform(0.5, 1.0))
@@ -156,36 +164,6 @@ class SeleniumBrowserSession:
             self._driver.quit()
         finally:
             self._driver = None
-
-    def _build_driver(self, config: AppConfig) -> webdriver.Chrome:
-        options = Options()
-        options.add_argument(f"--window-size={config.window_size}")
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", False)
-        if config.proxy:
-            options.add_argument(f"--proxy-server={config.proxy}")
-        user_agent = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/126.0.0.0 Safari/537.36"
-        )
-        options.add_argument(f"--user-agent={user_agent}")
-        return webdriver.Chrome(service=Service(config.driver_path), options=options)
-
-    def _stealth(self) -> None:
-        self._driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": """
-            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
-            Object.defineProperty(navigator, 'languages', {get: () => ['zh-CN', 'zh', 'en']});
-            window.chrome = { runtime: {} };
-            Object.defineProperty(navigator, 'permissions', {get: () => ({query: () => 'granted'})});
-            """
-        })
 
     def _human_type(self, element, text: str) -> None:
         element.clear()

@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from datetime import datetime
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -50,8 +51,8 @@ class FakeSession:
     def checkout(self) -> None:
         self.events.append("checkout")
 
-    def place_order(self) -> None:
-        self.events.append("place_order")
+    def place_order(self, target_time=None) -> None:
+        self.events.append(f"place_order:{target_time}")
 
     def capture_debug_artifact(self, action: str):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -90,7 +91,26 @@ class AppTests(unittest.TestCase):
                 "login:user:password",
                 "add:https://example.com/item1:1",
                 "checkout",
-                "place_order",
+                "place_order:None",
+            ],
+        )
+        self.assertEqual(session.closed, 1)
+
+    def test_run_with_scheduled_time(self) -> None:
+        session = FakeSession()
+        app = PurchaseApp(session_factory=lambda _config: session)
+        scheduled_time = datetime(2025, 12, 25, 10, 30, 0)
+
+        result = app.run(self.config, FakeStatusSink(), purchase_time=scheduled_time)
+
+        self.assertTrue(result.success)
+        self.assertEqual(
+            session.events,
+            [
+                "login:user:password",
+                "add:https://example.com/item1:1",
+                "checkout",
+                f"place_order:{scheduled_time}",
             ],
         )
         self.assertEqual(session.closed, 1)
