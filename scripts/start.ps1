@@ -8,5 +8,5 @@ if (-not (Test-Path $venvPython)) {
     exit 1
 }
 
-& $venvPython -m taobaogoods @args
+& $venvPython (Join-Path $projectRoot "main.py") @args
 exit $LASTEXITCODE
