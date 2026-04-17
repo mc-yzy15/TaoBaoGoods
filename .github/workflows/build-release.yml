@@ -54,6 +54,11 @@ jobs:
           pip install -r requirements.txt
           pip install selenium-stealth
 
+      - name: Run unit tests
+        shell: bash
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+
       - name: Get version tag (Windows)
         id: version_win
         if: matrix.os == 'windows-latest'
@@ -101,7 +106,6 @@ jobs:
           python -m nuitka `
             --standalone `
             --onefile `
-            --enable-plugin=selenium `
             --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} `
             --output-dir=dist `
             main.py
@@ -113,7 +117,6 @@ jobs:
           python -m nuitka \
             --standalone \
             --onefile \
-            --enable-plugin=selenium \
             --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} \
             --output-dir=dist \
             main.py

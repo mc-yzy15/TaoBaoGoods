@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-from config import (
+from src.config import (
     DEFAULT_CONFIG_TEXT,
     AppConfig,
     ConfigValidationError,
@@ -659,8 +659,8 @@ items:
         show_cursor()
         clear_screen()
 
-        from app import AppRuntimeError, PurchaseApp
-        from status import ConsoleStatusSink
+        from src.app import AppRuntimeError, PurchaseApp
+        from src.status import ConsoleStatusSink
 
         sink = ConsoleStatusSink(stream=sys.stdout)
         try:

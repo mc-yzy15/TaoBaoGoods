@@ -10,7 +10,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium_stealth import stealth as base_stealth
 
-from config import AppConfig
+from src.config import AppConfig
 
 
 def _human_delay(min_sec: float = 0.05, max_sec: float = 0.15) -> float:

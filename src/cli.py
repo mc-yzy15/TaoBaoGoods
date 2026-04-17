@@ -6,11 +6,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Sequence
 
-from app import AppRuntimeError, PurchaseApp
-from config import ConfigValidationError, load_config
-from interactive import run_interactive
-from paths import DEFAULT_CONFIG_PATH
-from status import ConsoleStatusSink, StatusSink
+from src.app import AppRuntimeError, PurchaseApp
+from src.config import ConfigValidationError, load_config
+from src.interactive import run_interactive
+from src.paths import DEFAULT_CONFIG_PATH
+from src.status import ConsoleStatusSink, StatusSink
 
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -19,7 +19,7 @@ TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 def build_status_sink(use_tk: bool = True) -> StatusSink:
     if use_tk:
         try:
-            from ui import TkStatusSink
+            from src.ui import TkStatusSink
             return TkStatusSink()
         except Exception:
             pass

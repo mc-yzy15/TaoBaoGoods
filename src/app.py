@@ -5,9 +5,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-from browser_session import BrowserActionError, BrowserSession, SeleniumBrowserSession
-from config import AppConfig, ConfigValidationError, Credentials, resolve_credentials, validate_runtime_prerequisites
-from status import NullStatusSink, StatusSink
+from src.browser_session import BrowserActionError, BrowserSession, SeleniumBrowserSession
+from src.config import AppConfig, ConfigValidationError, Credentials, resolve_credentials, validate_runtime_prerequisites
+from src.status import NullStatusSink, StatusSink
 
 
 class AppRuntimeError(RuntimeError):

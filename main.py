@@ -2,11 +2,11 @@ from pathlib import Path
 import sys
 
 
-PROJECT_SRC = Path(__file__).resolve().parent / "src"
-if str(PROJECT_SRC) not in sys.path:
-    sys.path.insert(0, str(PROJECT_SRC))
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from cli import main
+from src.cli import main
 
 
 if __name__ == "__main__":

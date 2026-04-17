@@ -37,15 +37,18 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          pip install nuitka==2.6.6
           pip install -r requirements.txt
 
       - name: Install dependencies (Unix)
         if: matrix.os != 'windows-latest'
         shell: bash
         run: |
-          pip install nuitka==2.6.6
           pip install -r requirements.txt
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
 
       - name: Export platform name
         id: platform
@@ -66,7 +69,6 @@ jobs:
           python -m nuitka `
             --standalone `
             --onefile `
-            --enable-plugin=selenium `
             --output-filename=TaoBaoGoods-Nightly-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} `
             --output-dir=dist `
             main.py
@@ -78,7 +80,6 @@ jobs:
           python -m nuitka \
             --standalone \
             --onefile \
-            --enable-plugin=selenium \
             --output-filename=TaoBaoGoods-Nightly-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} \
             --output-dir=dist \
             main.py

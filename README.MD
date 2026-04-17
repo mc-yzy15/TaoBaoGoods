@@ -4,12 +4,11 @@
 
 ## 仓库结构
 
-- `python_Version/`: Python 主线实现。
-- `python_Version/src/taobaogoods/`: 主线源码。
-- `python_Version/config/default.yaml`: 默认配置文件。
-- `python_Version/scripts/init.ps1`: 创建虚拟环境并安装项目。
-- `python_Version/scripts/start.ps1`: 启动入口，支持 `--config` 与 `--dry-run`。
-- `python_Version/tests/`: 单元测试。
+- `src/`: Python 主线源码。
+- `config/default.yaml`: 默认配置文件。
+- `scripts/init.ps1`: 创建虚拟环境并安装项目。
+- `scripts/start.ps1`: 启动入口，支持 `--config` 与 `--dry-run`。
+- `tests/`: 单元测试。
 
 ## 初始化
 
@@ -34,7 +33,7 @@ cd python_Version
 
 ## 配置
 
-默认配置位于 `python_Version/config/default.yaml`。
+默认配置位于 `config/default.yaml`。
 
 - `window_size`: 浏览器窗口大小，格式为 `宽,高`。
 - `proxy`: 代理地址，留空表示不使用。
