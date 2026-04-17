@@ -75,11 +75,12 @@ items:
             driver_path = Path(temp_dir) / "chromedriver.exe"
             driver_path.write_text("", encoding="utf-8")
             config_path = Path(temp_dir) / "config.yaml"
+            driver_path_str = str(driver_path).replace("\\", "\\\\")
             config_path.write_text(
-                f"""
+                rf"""
 window_size: "1280,720"
 proxy: ""
-driver_path: "{driver_path}"
+driver_path: "{driver_path_str}"
 items:
   - url: "https://example.com/item1"
     quantity: 1
