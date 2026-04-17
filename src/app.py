@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from .browser_session import BrowserActionError, BrowserSession, SeleniumBrowserSession
-from .config import AppConfig, ConfigValidationError, Credentials, resolve_credentials, validate_runtime_prerequisites
-from .status import NullStatusSink, StatusSink
+from browser_session import BrowserActionError, BrowserSession, SeleniumBrowserSession
+from config import AppConfig, ConfigValidationError, Credentials, resolve_credentials, validate_runtime_prerequisites
+from status import NullStatusSink, StatusSink
 
 
 class AppRuntimeError(RuntimeError):

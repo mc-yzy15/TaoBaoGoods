@@ -15,8 +15,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from .config import AppConfig
-from .paths import SCREENSHOT_DIR, ensure_runtime_dirs
+from config import AppConfig
+from paths import SCREENSHOT_DIR, ensure_runtime_dirs
 
 
 SELECTORS = {

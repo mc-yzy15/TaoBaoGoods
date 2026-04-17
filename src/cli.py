@@ -4,11 +4,11 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
-from .app import AppRuntimeError, PurchaseApp
-from .config import ConfigValidationError, load_config
-from .paths import DEFAULT_CONFIG_PATH
-from .status import ConsoleStatusSink, StatusSink
-from .ui import TkStatusSink
+from app import AppRuntimeError, PurchaseApp
+from config import ConfigValidationError, load_config
+from paths import DEFAULT_CONFIG_PATH
+from status import ConsoleStatusSink, StatusSink
+from ui import TkStatusSink
 
 
 def build_status_sink(dry_run: bool) -> StatusSink:
