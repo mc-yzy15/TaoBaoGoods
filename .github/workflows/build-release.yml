@@ -122,7 +122,7 @@ jobs:
             TAG="${GITHUB_REF#refs/tags/}"
             VERSION="${TAG#v}"
           else
-            VERSION="0.0.0+dev.$(echo $GITHUB_SHA | cut -c1-7)"
+            VERSION="0.0.0.0"
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -143,7 +143,7 @@ jobs:
             --windows-console-mode=force `
             --enable-plugin=upx `
             --lto=yes `
-            --jobs=auto `
+            --jobs=4 `
             --assume-yes-for-downloads `
             main.py
 
@@ -160,7 +160,7 @@ jobs:
             --file-description="淘宝自动购 深度防检测版" \
             --enable-plugin=upx \
             --lto=yes \
-            --jobs=auto \
+            --jobs=4 \
             --assume-yes-for-downloads \
             main.py
 
@@ -176,7 +176,7 @@ jobs:
             --product-name="TaoBaoGoods" \
             --file-description="淘宝自动购 深度防检测版" \
             --lto=yes \
-            --jobs=auto \
+            --jobs=4 \
             --assume-yes-for-downloads \
             main.py
 
@@ -191,9 +191,9 @@ jobs:
             --company-name="TaoBaoGoods" \
             --product-name="TaoBaoGoods" \
             --file-description="淘宝自动购 深度防检测版" \
-            --macos-create-Universal-Binary=no \
+            --macos-target-arch=arm64 \
             --lto=yes \
-            --jobs=auto \
+            --jobs=4 \
             --assume-yes-for-downloads \
             main.py
 

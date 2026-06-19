@@ -71,7 +71,7 @@ jobs:
             --output-dir=dist `
             --windows-console-mode=force `
             --lto=yes `
-            --jobs=auto `
+            --jobs=4 `
             --assume-yes-for-downloads `
             main.py
 
@@ -84,7 +84,7 @@ jobs:
             --output-filename=TaoBaoGoods-Nightly-${{ matrix.platform }}${{ matrix.suffix }} \
             --output-dir=dist \
             --lto=yes \
-            --jobs=auto \
+            --jobs=4 \
             --assume-yes-for-downloads \
             main.py
 
@@ -96,9 +96,9 @@ jobs:
             --onefile \
             --output-filename=TaoBaoGoods-Nightly-${{ matrix.platform }}${{ matrix.suffix }} \
             --output-dir=dist \
-            --macos-create-Universal-Binary=no \
+            --macos-target-arch=arm64 \
             --lto=yes \
-            --jobs=auto \
+            --jobs=4 \
             --assume-yes-for-downloads \
             main.py
 
