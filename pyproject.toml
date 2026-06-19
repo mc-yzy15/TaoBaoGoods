@@ -12,6 +12,7 @@ dependencies = [
     "PyYAML>=6.0,<7",
     "selenium>=4.27,<5",
     "selenium-stealth>=1.0.0",
+    "flet>=0.27,<1",
 ]
 
 [project.scripts]
