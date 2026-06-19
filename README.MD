@@ -2,15 +2,16 @@
 
 **版本 1.2.5** | 淘宝自动购 · 深度防检测版
 
-`TaoBaoGoods` 是一款基于 Selenium 的淘宝自动化购物流程工具，支持交互式 TUI 配置编辑器、纯 CLI 模式、G客观测模式，并内置多重反检测措施。
+`TaoBaoGoods` 是一款基于 Selenium 的淘宝自动化购物流程工具，内置 **Flet 图形界面**（默认）和纯 CLI 模式，集成多重反检测措施。
 
 ## 功能特性
 
-- **三种运行模式**：交互式 TUI（默认）、纯 CLI、Tk GUI 状态窗口
-- **深度反检测**：WebGL/Canvas/ navigator 等指纹随机化，模拟真实浏览器环境
-- **定时抢购**：支持指定时间自动提交订单
+- **Flet 图形界面**（默认）：现代化 GUI，配置编辑 + 实时运行状态面板
+- **纯 CLI 模式**：无需桌面环境，脚本化运行
+- **深度反检测**：WebGL/Canvas/navigator 等指纹随机化，模拟真实浏览器环境
+- **定时抢购**：支持指定时间自动提交订单（CLI：`--purchase-time`）
 - **Dry-Run**：无需打开浏览器，验证配置和流程完整性
-- **交互式配置编辑器**：纯终端 UI，无需记忆 YAML 格式
+- **商品管理 GUI**：图形化添加/编辑/删除待购商品
 - **凭据灵活管理**：支持配置文件、环境变量、运行时输入三种方式
 
 ## 仓库结构
@@ -21,14 +22,13 @@ TaoBaoGoods/
 │   ├── __init__.py           # 包入口，版本信息
 │   ├── __main__.py           # python -m src 入口
 │   ├── app.py                # 核心应用逻辑
-│   ├── browser_session.py   # Selenium 浏览器会话
-│   ├── cli.py                # CLI / TUI 主入口
+│   ├── browser_session.py    # Selenium 浏览器会话
+│   ├── cli.py                # CLI 入口 + Flet GUI 启动
 │   ├── config.py             # 配置加载与校验
-│   ├── interactive.py        # 交互式 TUI 配置编辑器
+│   ├── gui.py                # Flet 图形界面（默认交互方式）
 │   ├── paths.py              # 路径管理
 │   ├── stealth.py            # 反检测措施（WebGL/Canvas 伪造等）
-│   ├── status.py             # 状态输出抽象
-│   └── ui.py                 # Tk GUI 状态窗口
+│   └── status.py             # 状态输出抽象
 ├── config/
 │   └── default.yaml          # 默认配置文件
 ├── scripts/
@@ -37,6 +37,7 @@ TaoBaoGoods/
 ├── tests/                    # 单元测试
 ├── docs/
 │   └── README.md             # 项目文档（用于 PyPI 等分发平台）
+├── AGENTS.md                 # AI agent 项目指南
 ├── pyproject.toml            # setuptools 构建配置
 └── requirements.txt          # pip 依赖
 ```
@@ -49,10 +50,17 @@ TaoBaoGoods/
 
 ## 启动
 
-启动交互式 TUI 配置编辑器（推荐）：
+默认启动 Flet 图形界面（推荐）：
 
 ```powershell
 .\scripts\start.ps1
+```
+
+纯 CLI 模式（无需桌面环境）：
+
+```powershell
+.\scripts\start.ps1 --cli
+.\scripts\start.ps1 --cli --dry-run
 ```
 
 指定配置文件：
@@ -61,35 +69,10 @@ TaoBaoGoods/
 .\scripts\start.ps1 --config config\default.yaml
 ```
 
-Dry-run 验证：
+## CLI 定时抢购
 
 ```powershell
-.\scripts\start.ps1 --dry-run
-```
-
-## CLI 模式
-
-使用已有配置文件，不启动 TUI 编辑器：
-
-```powershell
-.\scripts\start.ps1 --cli
-.\scripts\start.ps1 --cli --dry-run
-```
-
-## GUI 模式
-
-Tk 窗口显示运行状态（无配置编辑器）：
-
-```powershell
-.\scripts\start.ps1 --gui
-```
-
-## 定时抢购
-
-指定下单时间（本地时间）：
-
-```powershell
-.\scripts\start.ps1 --purchase-time "2026-04-20 10:00:00"
+.\scripts\start.ps1 --cli --purchase-time "2026-04-20 10:00:00"
 ```
 
 ## 配置
@@ -134,7 +117,7 @@ items:
 ## 技术栈
 
 - Python ≥ 3.10
+- **Flet** 0.27+（GUI 框架）
 - Selenium 4.x + selenium-stealth
 - PyYAML
 - setuptools (pyproject.toml)
-

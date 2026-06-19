@@ -7,22 +7,25 @@ from typing import Sequence
 
 from src.app import AppRuntimeError, PurchaseApp
 from src.config import ConfigValidationError, load_config
-from src.interactive import run_interactive
 from src.paths import DEFAULT_CONFIG_PATH
-from src.status import ConsoleStatusSink, StatusSink
+from src.status import ConsoleStatusSink
+
+
+def run_gui(config_path: Path) -> int:
+    """Launch the Flet GUI (default mode)."""
+    try:
+        from src.gui import FletGUI
+    except ImportError as exc:
+        print(f"[错误] Flet GUI 不可用，请安装 flet 依赖: pip install flet\n  ({exc})", file=__import__("sys").stderr)
+        return 1
+
+    import flet as ft
+    app = FletGUI(config_path)
+    ft.app(target=app.build)
+    return 0
 
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-
-def build_status_sink(use_tk: bool = True) -> StatusSink:
-    if use_tk:
-        try:
-            from src.ui import TkStatusSink
-            return TkStatusSink()
-        except Exception:
-            pass
-    return ConsoleStatusSink()
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -31,20 +34,17 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 运行模式:
-  不带参数           启动交互式TUI配置编辑器（推荐）
-  --interactive, -i  同上，显式启动交互模式
-  --dry-run         验证配置和流程，不打开浏览器
-  --purchase-time   定时下单时间，格式: "YYYY-MM-DD HH:MM:SS"
-  --gui             启动GUI模式（Tk窗口，仅状态显示）
-  --cli             纯CLI模式，无TUI（使用已有配置文件）
-  --help            显示本帮助信息
+  不带参数           启动 Flet 图形界面（推荐，默认）
+  --cli              纯 CLI 模式，使用已有配置文件
+  --dry-run          CLI 下验证配置，不打开浏览器
+  --purchase-time    CLI 下定时下单，格式: "YYYY-MM-DD HH:MM:SS"
+  --help             显示本帮助信息
 
 示例:
-  TaoBaoGoods.exe                        # 交互式TUI配置编辑器
-  TaoBaoGoods.exe --cli                 # 纯CLI，使用已有配置
-  TaoBaoGoods.exe --cli --dry-run        # CLI dry-run
-  TaoBaoGoods.exe --gui                  # GUI模式
-"""
+  TaoBaoGoods.exe                       # Flet 图形界面
+  TaoBaoGoods.exe --cli                 # 纯 CLI 模式
+  TaoBaoGoods.exe --cli --dry-run       # CLI dry-run
+""",
     )
     parser.add_argument(
         "--config",
@@ -52,9 +52,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Path to the YAML config file.",
     )
     parser.add_argument(
-        "-i", "--interactive",
+        "--cli",
         action="store_true",
-        help="启动交互式TUI配置编辑器（默认行为）",
+        help="Pure CLI mode - use existing config file, no GUI.",
     )
     parser.add_argument(
         "--dry-run",
@@ -65,16 +65,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--purchase-time",
         metavar="YYYY-MM-DD HH:MM:SS",
         help="Schedule order placement at a specific time (local time).",
-    )
-    parser.add_argument(
-        "--gui",
-        action="store_true",
-        help="Use Tk GUI for status display (no config editor).",
-    )
-    parser.add_argument(
-        "--cli",
-        action="store_true",
-        help="Pure CLI mode - use existing config file, no TUI editor.",
     )
     return parser.parse_args(argv)
 
@@ -93,24 +83,16 @@ def parse_purchase_time(value: str | None) -> datetime | None:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
 
-    is_tui = not args.gui and not args.cli
-    is_dry = args.dry_run
-    is_gui = args.gui
+    if not args.cli:
+        return run_gui(Path(args.config))
 
-    if is_tui and not is_dry:
-        return run_interactive(Path(args.config))
-
-    if is_gui:
-        sink = build_status_sink(use_tk=True)
-    else:
-        sink = ConsoleStatusSink()
-
+    sink = ConsoleStatusSink()
     try:
         config = load_config(Path(args.config))
         purchase_time = parse_purchase_time(args.purchase_time)
         result = PurchaseApp().run(
             config, sink,
-            dry_run=is_dry,
+            dry_run=args.dry_run,
             purchase_time=purchase_time
         )
         sink.show_info("完成", result.message)
