@@ -7,6 +7,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.11"
+  NUITKA_VERSION: "2.6.6"
 
 jobs:
   build:
@@ -14,14 +15,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
           - os: windows-latest
             suffix: ".exe"
+            platform: "win"
           - os: ubuntu-latest
             suffix: ""
+            platform: "linux"
           - os: macos-latest
             suffix: ""
+            platform: "macos"
 
     steps:
       - name: Checkout code
@@ -32,60 +35,76 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: powershell
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          pip install -r requirements.txt
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libffi-dev \
+            libssl-dev \
+            python3-dev \
+            zlib1g-dev
 
-      - name: Install dependencies (Unix)
-        if: matrix.os != 'windows-latest'
-        shell: bash
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install openssl@3
+
+      - name: Install Python dependencies
         run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install nuitka==${{ env.NUITKA_VERSION }}
           pip install -r requirements.txt
+          pip install selenium-stealth ordered-set zstandard
 
       - name: Run unit tests
-        shell: bash
-        run: |
-          python -m unittest discover -s tests -p "test_*.py" -v
+        run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Export platform name
-        id: platform
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            echo "NAME=win" >> "$GITHUB_OUTPUT"
-          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            echo "NAME=linux" >> "$GITHUB_OUTPUT"
-          else
-            echo "NAME=macos" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build with nuitka standalone (Windows)
+      - name: Build with Nuitka (Windows)
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
           python -m nuitka `
             --standalone `
             --onefile `
-            --output-filename=TaoBaoGoods-Nightly-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} `
+            --output-filename=TaoBaoGoods-Nightly-${{ matrix.platform }}${{ matrix.suffix }} `
             --output-dir=dist `
+            --windows-console-mode=force `
+            --lto=yes `
+            --jobs=auto `
+            --assume-yes-for-downloads `
             main.py
 
-      - name: Build with nuitka standalone (Unix)
-        if: matrix.os != 'windows-latest'
-        shell: bash
+      - name: Build with Nuitka (Linux)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           python -m nuitka \
             --standalone \
             --onefile \
-            --output-filename=TaoBaoGoods-Nightly-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} \
+            --output-filename=TaoBaoGoods-Nightly-${{ matrix.platform }}${{ matrix.suffix }} \
             --output-dir=dist \
+            --lto=yes \
+            --jobs=auto \
+            --assume-yes-for-downloads \
+            main.py
+
+      - name: Build with Nuitka (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          python -m nuitka \
+            --standalone \
+            --onefile \
+            --output-filename=TaoBaoGoods-Nightly-${{ matrix.platform }}${{ matrix.suffix }} \
+            --output-dir=dist \
+            --macos-create-Universal-Binary=no \
+            --lto=yes \
+            --jobs=auto \
+            --assume-yes-for-downloads \
             main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TaoBaoGoods-Nightly-${{ steps.platform.outputs.NAME }}
-          path: dist/TaoBaoGoods-Nightly-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }}
+          name: TaoBaoGoods-Nightly-${{ matrix.platform }}
+          path: dist/TaoBaoGoods-Nightly-${{ matrix.platform }}${{ matrix.suffix }}
           retention-days: 14
