@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 
 from src.config import (
-    DEFAULT_CONFIG_TEXT,
     AppConfig,
     ConfigValidationError,
     ItemConfig,
@@ -324,8 +323,8 @@ items:
             {"type": "item", "id": "password", "text": f"密码          {C_CYAN}{'******' if self._password else '(未设置)'}{C_RESET}", "hotkey": "L"},
             {"type": "header", "text": "─── 商品列表 ───"},
             {"type": "item", "id": "add_item", "text": f"添加商品  (当前 {C_CYAN}{len(self._items)}{C_RESET} 个)", "hotkey": "A"},
-            {"type": "item", "id": "edit_item", "text": f"编辑商品", "hotkey": "E", "disabled": len(self._items) == 0},
-            {"type": "item", "id": "remove_item", "text": f"删除商品", "hotkey": "R", "disabled": len(self._items) == 0},
+            {"type": "item", "id": "edit_item", "text": "编辑商品", "hotkey": "E", "disabled": len(self._items) == 0},
+            {"type": "item", "id": "remove_item", "text": "删除商品", "hotkey": "R", "disabled": len(self._items) == 0},
             {"type": "header", "text": "─── 运行 ───"},
             {"type": "item", "id": "save", "text": f"保存配置  {'(已保存)' if not self._changed else f'{C_YELLOW}*有未保存更改{C_RESET}'}", "hotkey": "S"},
             {"type": "item", "id": "run", "text": "立即运行 (包含自动保存)", "hotkey": "G"},
@@ -334,7 +333,6 @@ items:
         ]
 
     def _render_menu_item(self, item: dict, selected: bool, idx: int) -> None:
-        indent = 2
         if item["type"] == "header":
             sys.stdout.write(f"\n{C_BRIGHT}{C_MAGENTA}  {item['text']}{C_RESET}\n")
             return

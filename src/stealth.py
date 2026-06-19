@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import random
-import time
 from typing import Any
 
-import selenium.webdriver.common.action_chains
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -1395,23 +1393,6 @@ def _stealth_chrome(
         configurable: true,
         enumerable: true
     });
-    """
-
-    has_webgl_vendor = """
-    const origGetExtension = WebGLRenderingContext.prototype.getExtension;
-    WebGLRenderingContext.prototype.getExtension = function(name) {
-        if (name === 'WEBGL_debug_renderer_info') {
-            return {
-                UNMASKED_VENDOR_WEBGL: 0x9245,
-                UNMASKED_RENDERER_WEBGL: 0x9246
-            };
-        }
-        try {
-            return origGetExtension.call(this, name);
-        } catch (e) {
-            return null;
-        }
-    };
     """
 
     scripts = []

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Sequence
@@ -97,7 +96,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     is_tui = not args.gui and not args.cli
     is_dry = args.dry_run
     is_gui = args.gui
-    is_cli = args.cli
 
     if is_tui and not is_dry:
         return run_interactive(Path(args.config))

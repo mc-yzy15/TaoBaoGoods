@@ -10,6 +10,7 @@ from typing import Protocol
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,7 +18,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from src.config import AppConfig
 from src.paths import SCREENSHOT_DIR, ensure_runtime_dirs
-from src.stealth import apply_stealth, build_stealth_chrome
+from src.stealth import build_stealth_chrome
 
 
 TAOBAO_URLS = {
@@ -68,15 +69,21 @@ class BrowserSession(Protocol):
 class SeleniumBrowserSession:
     def __init__(self, config: AppConfig) -> None:
         self._config = config
-        self._driver = build_stealth_chrome(config)
-        self._human_delay_min = 0.08
-        self._human_delay_max = 0.25
-        self._scroll_pause_min = 0.4
-        self._scroll_pause_max = 1.0
+        self._driver: webdriver.Chrome | None = build_stealth_chrome(config)
+        self._human_delay_min: float = 0.08
+        self._human_delay_max: float = 0.25
+        self._scroll_pause_min: float = 0.4
+        self._scroll_pause_max: float = 1.0
+
+    @property
+    def _active_driver(self) -> webdriver.Chrome:
+        if self._driver is None:
+            raise BrowserError("浏览器会话已关闭")
+        return self._driver
 
     def login(self, username: str, password: str) -> None:
         def _perform() -> None:
-            self._driver.get(URLS["login"])
+            self._active_driver.get(URLS["login"])
             time.sleep(random.uniform(self._human_delay_min, self._human_delay_max))
             username_input = self._wait_for(SELECTORS["username"])
             self._human_type(username_input, username)
@@ -91,7 +98,7 @@ class SeleniumBrowserSession:
                     action="登录",
                     detail="检测到滑块验证码，请手动在浏览器中完成验证后重试。"
                 )
-            WebDriverWait(self._driver, 15).until(
+            WebDriverWait(self._active_driver, 15).until(
                 lambda d: "login.taobao.com" not in d.current_url
             )
 
@@ -99,7 +106,7 @@ class SeleniumBrowserSession:
 
     def add_to_cart(self, url: str, quantity: int) -> None:
         def _perform() -> None:
-            self._driver.get(url)
+            self._active_driver.get(url)
             time.sleep(random.uniform(2.0, 4.0))
             self._scroll_random()
             time.sleep(random.uniform(0.5, 1.5))
@@ -117,7 +124,7 @@ class SeleniumBrowserSession:
 
     def checkout(self) -> None:
         def _perform() -> None:
-            self._driver.get(URLS["cart"])
+            self._active_driver.get(URLS["cart"])
             time.sleep(random.uniform(2.0, 3.5))
             self._scroll_random()
             time.sleep(random.uniform(0.5, 1.0))
@@ -174,21 +181,20 @@ class SeleniumBrowserSession:
 
     def _human_click(self, element) -> None:
         size = element.size
-        offset_x = random.uniform(size["width"] * 0.2, size["width"] * 0.8)
-        offset_y = random.uniform(size["height"] * 0.2, size["height"] * 0.8)
-        from selenium.webdriver.common.action_chains import ActionChains
-        chain = ActionChains(self._driver)
-        chain.move_to_element_with_offset(element, offset_x, offset_y)
+        offset_x = random.uniform(-size["width"] * 0.3, size["width"] * 0.3)
+        offset_y = random.uniform(-size["height"] * 0.3, size["height"] * 0.3)
+        chain = ActionChains(self._active_driver)
+        chain.move_to_element_with_offset(element, int(offset_x), int(offset_y))
         chain.pause(random.uniform(0.1, 0.3))
         chain.click()
         chain.perform()
 
     def _scroll_random(self) -> None:
         from selenium.webdriver.common.action_chains import ActionChains
-        chain = ActionChains(self._driver)
+        chain = ActionChains(self._active_driver)
         scroll_count = random.randint(1, 3)
         for _ in range(scroll_count):
-            chain.scroll(0, random.randint(200, 600))
+            chain.scroll_by_amount(0, random.randint(200, 600))
             chain.pause(random.uniform(0.3, 0.7))
         chain.perform()
 
@@ -211,7 +217,7 @@ class SeleniumBrowserSession:
     def _find_add_to_cart_button(self):
         for selector in [SELECTORS["add_to_cart"], SELECTORS["add_to_cart_alt"]]:
             try:
-                return WebDriverWait(self._driver, 3).until(
+                return WebDriverWait(self._active_driver, 3).until(
                     EC.element_to_be_clickable(selector)
                 )
             except Exception:
@@ -221,7 +227,7 @@ class SeleniumBrowserSession:
     def _find_submit_button(self):
         for selector in [SELECTORS["submit_order"], SELECTORS["submit_order_alt"]]:
             try:
-                return WebDriverWait(self._driver, 3).until(
+                return WebDriverWait(self._active_driver, 3).until(
                     EC.element_to_be_clickable(selector)
                 )
             except Exception:
@@ -230,16 +236,16 @@ class SeleniumBrowserSession:
 
     def _is_element_visible(self, locator, timeout: int = 0):
         try:
-            WebDriverWait(self._driver, timeout).until(EC.visibility_of_element_located(locator))
+            WebDriverWait(self._active_driver, timeout).until(EC.visibility_of_element_located(locator))
             return True
         except Exception:
             return False
 
     def _wait_for(self, locator):
-        return WebDriverWait(self._driver, 15).until(EC.presence_of_element_located(locator))
+        return WebDriverWait(self._active_driver, 15).until(EC.presence_of_element_located(locator))
 
     def _wait_clickable(self, locator):
-        return WebDriverWait(self._driver, 15).until(EC.element_to_be_clickable(locator))
+        return WebDriverWait(self._active_driver, 15).until(EC.element_to_be_clickable(locator))
 
     def _run_action(self, action: str, operation) -> None:
         try:
@@ -248,6 +254,3 @@ class SeleniumBrowserSession:
             raise
         except Exception as exc:
             raise BrowserActionError(action=action, detail=str(exc)) from exc
-
-
-SELECTORS = TAOBAO_SELECTORS

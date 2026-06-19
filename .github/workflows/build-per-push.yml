@@ -13,7 +13,6 @@ env:
 
 jobs:
   build:
-    environment: GITHUB_TOKEN
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

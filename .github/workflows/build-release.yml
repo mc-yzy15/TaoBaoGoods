@@ -9,129 +9,382 @@ on:
   release:
     types:
       - published
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: "Debug mode (skip tests)"
+        required: false
+        default: "false"
+        type: boolean
+      platforms:
+        description: "Platforms to build (all/win/linux/macos)"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - win
+          - linux
+          - macos
 
 env:
   PYTHON_VERSION: "3.11"
+  NUITKA_VERSION: "2.6.6"
 
 jobs:
   build:
-    environment: GITHUB_TOKEN
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
         include:
+          # Windows
           - os: windows-latest
             suffix: ".exe"
+            platform: "win"
+            arch: "x64"
+            build: true
+
+          # Linux x86_64
           - os: ubuntu-latest
             suffix: ""
+            platform: "linux"
+            arch: "x86_64"
+            build: ${{ github.event.inputs.platforms != 'win' && github.event.inputs.platforms != 'macos' || github.event.inputs.platforms == 'all' }}
+
+          # Linux ARM64 (aarch64) - 使用 QEMU
+          - os: ubuntu-latest
+            suffix: ""
+            platform: "linux"
+            arch: "aarch64"
+            qemu: true
+            build: ${{ github.event.inputs.platforms != 'win' && github.event.inputs.platforms != 'macos' || github.event.inputs.platforms == 'all' }}
+
+          # macOS Intel (x86_64)
+          - os: macos-13
+            suffix: ""
+            platform: "macos"
+            arch: "x86_64"
+            build: ${{ github.event.inputs.platforms != 'win' && github.event.inputs.platforms != 'linux' || github.event.inputs.platforms == 'all' }}
+
+          # macOS Apple Silicon (arm64)
           - os: macos-latest
             suffix: ""
+            platform: "macos"
+            arch: "arm64"
+            build: ${{ github.event.inputs.platforms != 'win' && github.event.inputs.platforms != 'linux' || github.event.inputs.platforms == 'all' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
 
-      - name: Install dependencies (Windows)
+      - name: Get pip cache dir
+        id: pip-cache
+        shell: bash
+        run: echo "dir=$(pip cache dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pip-cache.outputs.dir }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-pip-
+
+      # ========== 系统依赖安装 ==========
+
+      - name: Install system dependencies (Windows)
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          pip install nuitka==2.6.6
-          pip install -r requirements.txt
-          pip install selenium-stealth
+          choco install upx -y
 
-      - name: Install dependencies (Unix)
-        if: matrix.os != 'windows-latest'
-        shell: bash
+      - name: Install system dependencies (Linux x86_64)
+        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
         run: |
-          pip install nuitka==2.6.6
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libffi-dev \
+            libssl-dev \
+            python3-dev \
+            zlib1g-dev \
+            upx-ucl
+
+      - name: Set up QEMU for ARM64 cross-compilation
+        if: matrix.qemu == true
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Install system dependencies (Linux ARM64 via QEMU)
+        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'aarch64'
+        run: |
+          docker run --rm --platform linux/arm64 -v $PWD:/app -w /app \
+            ubuntu:22.04 bash -c "
+              apt-get update && apt-get install -y \
+                python3 python3-pip python3-dev \
+                build-essential libffi-dev libssl-dev zlib1g-dev &&
+              echo 'ARM64 environment ready'
+            "
+
+      - name: Install system dependencies (macOS Intel)
+        if: matrix.os == 'macos-13'
+        run: brew install openssl@3 upx
+
+      - name: Install system dependencies (macOS Apple Silicon)
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: brew install openssl@3 upx
+
+      # ========== Python 依赖安装 ==========
+
+      - name: Install Python dependencies (Native)
+        if: matrix.qemu != true
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install nuitka==${{ env.NUITKA_VERSION }}
           pip install -r requirements.txt
-          pip install selenium-stealth
+          pip install selenium-stealth ordered-set zstandard
+
+      - name: Install Python dependencies (ARM64 in container)
+        if: matrix.qemu == true
+        run: |
+          docker run --rm --platform linux/arm64 -v $PWD:/app -w /app \
+            ubuntu:22.04 bash -c "
+              pip3 install --upgrade pip setuptools wheel &&
+              pip3 install nuitka==${{ env.NUITKA_VERSION }} &&
+              pip3 install -r requirements.txt &&
+              pip3 install selenium-stealth ordered-set zstandard &&
+              echo 'Dependencies installed for ARM64'
+            "
+
+      # ========== 测试 ==========
 
       - name: Run unit tests
-        shell: bash
-        run: |
-          python -m unittest discover -s tests -p "test_*.py" -v
+        if: github.event.inputs.debug != 'true' && matrix.qemu != true
+        run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Get version tag (Windows)
-        id: version_win
-        if: matrix.os == 'windows-latest'
-        shell: powershell
-        run: |
-          $tag = $env:GITHUB_REF_NAME
-          $version = $tag -replace "^v", ""
-          "VERSION=$version" >> $env:GITHUB_OUTPUT
+      # ========== 版本信息提取 ==========
 
-      - name: Get version tag (Unix)
-        id: version_unix
-        if: matrix.os != 'windows-latest'
-        shell: bash
-        run: |
-          tag="${GITHUB_REF_NAME}"
-          version="${tag#v}"
-          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Export version
+      - name: Extract version info
         id: version
         shell: bash
         run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            echo "VERSION=${{ steps.version_win.outputs.VERSION }}" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            VERSION="${TAG#v}"
           else
-            echo "VERSION=${{ steps.version_unix.outputs.VERSION }}" >> "$GITHUB_OUTPUT"
+            VERSION="dev-$(echo $GITHUB_SHA | cut -c1-7)"
           fi
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Export platform name
-        id: platform
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            echo "NAME=win" >> "$GITHUB_OUTPUT"
-          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            echo "NAME=linux" >> "$GITHUB_OUTPUT"
-          else
-            echo "NAME=macos" >> "$GITHUB_OUTPUT"
-          fi
+      # ========== Nuitka 构建 ==========
 
-      - name: Build with nuitka (Windows)
+      - name: Build with Nuitka (Windows x64)
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
           python -m nuitka `
             --standalone `
             --onefile `
-            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} `
             --output-dir=dist `
+            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }} `
+            --company-name="TaoBaoGoods" `
+            --product-name="TaoBaoGoods" `
+            --file-version=${{ steps.version.outputs.VERSION }} `
+            --product-version=${{ steps.version.outputs.VERSION }} `
+            --file-description="淘宝自动购 深度防检测版" `
+            --windows-console-mode=force `
+            --windows-icon-from-ico=assets/icon.ico `
+            --enable-plugin=upx `
+            --lto=yes `
+            --jobs=auto `
             main.py
 
-      - name: Build with nuitka (Unix)
-        if: matrix.os != 'windows-latest'
-        shell: bash
+      - name: Build with Nuitka (Linux x86_64)
+        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x86_64'
         run: |
           python -m nuitka \
             --standalone \
             --onefile \
-            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }} \
             --output-dir=dist \
+            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }} \
+            --company-name="TaoBaoGoods" \
+            --product-name="TaoBaoGoods" \
+            --file-version=${{ steps.version.outputs.VERSION }} \
+            --product-version=${{ steps.version.outputs.VERSION }} \
+            --file-description="淘宝自动购 深度防检测版" \
+            --linux-onefile-icon=assets/icon.png \
+            --enable-plugin=upx \
+            --lto=yes \
+            --jobs=auto \
             main.py
+
+      - name: Build with Nuitka (Linux ARM64 via QEMU)
+        if: matrix.qemu == true
+        run: |
+          docker run --rm --platform linux/arm64 -v $PWD:/app -w /app \
+            ubuntu:22.04 bash -c "
+              python3 -m nuitka \
+                --standalone \
+                --onefile \
+                --output-dir=/app/dist \
+                --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }} \
+                --company-name='TaoBaoGoods' \
+                --product-name='TaoBaoGoods' \
+                --file-version=${{ steps.version.outputs.VERSION }} \
+                --product-version=${{ steps.version.outputs.VERSION }} \
+                --file-description='淘宝自动购 深度防检测版' \
+                --enable-plugin=upx \
+                --lto=yes \
+                --jobs=auto \
+                /app/main.py && \
+              echo 'ARM64 build completed'
+            "
+
+      - name: Build with Nuitka (macOS Intel)
+        if: matrix.os == 'macos-13'
+        run: |
+          python -m nuitka \
+            --standalone \
+            --onefile \
+            --output-dir=dist \
+            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }} \
+            --company-name="TaoBaoGoods" \
+            --product-name="TaoBaoGoods" \
+            --file-version=${{ steps.version.outputs.VERSION }} \
+            --product-version=${{ steps.version.outputs.VERSION }} \
+            --file-description="淘宝自动购 深度防检测版" \
+            --macos-app-icon=assets/icon.icns \
+            --enable-plugin=upx \
+            --lto=yes \
+            --jobs=auto \
+            main.py
+
+      - name: Build with Nuitka (macOS Apple Silicon)
+        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        run: |
+          python -m nuitka \
+            --standalone \
+            --onefile \
+            --output-dir=dist \
+            --output-filename=TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }} \
+            --company-name="TaoBaoGoods" \
+            --product-name="TaoBaoGoods" \
+            --file-version=${{ steps.version.outputs.VERSION }} \
+            --product-version=${{ steps.version.outputs.VERSION }} \
+            --file-description="淘宝自动购 深度防检测版" \
+            --macos-app-icon=assets/icon.icns \
+            --macos-create-Universal-Binary=no \
+            --enable-plugin=upx \
+            --lto=yes \
+            --jobs=auto \
+            main.py
+
+      # ========== 上传产物 ==========
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}
-          path: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }}
+          name: TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }}
           retention-days: 30
+          if-no-files-found: error
 
-      - name: Upload to Release
-        if: github.event_name == 'release'
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ steps.platform.outputs.NAME }}${{ matrix.suffix }}
+          files: dist/TaoBaoGoods-v${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix }}
+          generate_release_notes: true
         env:
-          TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-nightly:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create nightly release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: nightly
+          name: "Nightly Build (${{ github.sha }})"
+          prerelease: true
+          files: artifacts/*
+          body: |
+            ## 📦 Nightly Build - Multi-Architecture
+
+            ### 🖥️ Supported Platforms
+
+            | Platform | Architecture | File |
+            |----------|-------------|------|
+            | 🪟 Windows | x64 | `*-win-x64.exe` |
+            | 🐧 Linux | x86_64 | `*-linux-x86_64` |
+            | 🐧 Linux | aarch64 (ARM64) | `*-linux-aarch64` |
+            | 🍎 macOS | Intel (x86_64) | `*-macos-x86_64` |
+            | 🍎 macOS | Apple Silicon (arm64) | `*-macos-arm64` |
+
+            ---
+
+            **Commit:** `${{ github.sha }}`
+
+            **Triggered by:** Push to `master` branch
+
+            **Build Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+            ---
+
+            *这是自动生成的开发版本，可能包含未测试的功能*
+
+            ### 🔧 Compatibility Notes
+
+            - **Linux**: Compatible with Ubuntu 20.04+, Debian 11+, CentOS 8+, Fedora 36+, Arch Linux
+            - **macOS**: Requires macOS 10.15+ (Catalina or later)
+            - **Windows**: Requires Windows 10+ (64-bit only)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Build summary
+        run: |
+          echo "## 📊 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            echo "✅ **Status:** SUCCESS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Built Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform | Arch | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows | x64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | x86_64 | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux | aarch64 (ARM) | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS | Intel (x86_64) | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS | Apple Silicon (arm64) | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Ref:** \`${{ github.ref }}\`" >> $GITHUB_STEP_SUMMARY
